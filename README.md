@@ -62,14 +62,17 @@ Alternatively, you can navigate to the specific test files in your IDE and press
 * Flutter: Cross-platform framework for building mobile applications.
 * Dart: Programming language used with Flutter.
 * openweathermap API: for getting an weather API.
-* Bloc State Management: Utilizing the Bloc library for state management.
 * Repository Pattern: Utilizing the repository pattern for data management and abstraction.
 * Clean Architecture: Following the principles of Clean Architecture for organized and maintainable code.
-* GoRouter: Implementing the GoRouter package for navigation within the app.
-* Dio: A powerful HTTP client for Dart, used for making network requests.
 * Unit testing: Focuses on testing individual units or components of the app, ensuring that each part functions correctly in isolation.
 * Widget Testing: Ensures that the user interface behaves as expected and correctly reflects the app's state.
-* HydratedBloc: Manages state persistence in Bloc state management, maintaining state across app restarts.
-* PermissionHandler: Manages permissions, such as location permissions, ensuring the app can access necessary features.
-* Geo Locator: Provides accurate location services for obtaining the device's exact position.
-* Built Value: Used for API models, including serialization and deserialization of data.
+* flutter_bloc: Utilizing the Bloc library for state management.
+* go_router: Implementing the GoRouter package for navigation within the app.
+* dio: A powerful HTTP client for Dart, used for making network requests.
+* hydrated_bloc: Manages state persistence in Bloc state management, maintaining state across app restarts.
+* permission_handler: Manages permissions, such as location permissions, ensuring the app can access necessary features.
+* geo_locator: Provides accurate location services for obtaining the device's exact position.
+* built_value: Used for API models, including serialization and deserialization of data.
+* mockito: Used for creating mock objects and stubs for unit testing.
+* flutter_test: Provides testing utilities for Flutter widgets.
+* bloc_test: Facilitates testing of Bloc state management logic.
