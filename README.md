@@ -23,7 +23,7 @@ flutter clean && flutter pub get && flutter packages pub run build_runner build
 
 ### Step 3: Create a .env File
 
-Before running the app, you need to create a .env file inside the send_money_app folder. Add the following line to the file:
+Before running the app, you need to create a .env file inside the weather_mobile_app folder. Add the following line to the file:
 
 ```env
 API_KEY=your_api_key_here
