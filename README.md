@@ -10,7 +10,7 @@ First, clone this project to your local machine:
 
 ```bash
 git clone https://github.com/janjan011029/weather_mobile_app.git
-cd send_money_app
+cd weather_mobile_app
 ```
 
 ### Step 2: Clean and Get Dependencies
