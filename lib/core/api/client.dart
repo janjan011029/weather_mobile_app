@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class DioClient {
   late final Dio _dio;
@@ -12,6 +13,26 @@ class DioClient {
         connectTimeout: const Duration(milliseconds: 15000),
         receiveTimeout: const Duration(milliseconds: 15000),
         responseType: ResponseType.json,
+      ),
+    );
+
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // Modify or inspect the request before it's sent
+          if (kDebugMode) print("Request sent to: ${options.uri}");
+          return handler.next(options);
+        },
+        onResponse: (response, handler) {
+          // Modify or inspect the response before it's returned
+          if (kDebugMode) print("Response received: ${response.data}");
+          return handler.next(response);
+        },
+        onError: (DioException error, handler) {
+          // Handle or inspect errors before they are returned
+          if (kDebugMode) print("Error occurred: ${error.message}");
+          return handler.next(error);
+        },
       ),
     );
   }
