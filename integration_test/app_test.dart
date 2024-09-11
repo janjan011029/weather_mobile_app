@@ -1,18 +1,22 @@
 import 'dart:io';
 
-import 'package:bloc_test/bloc_test.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:integration_test/integration_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:weather_mobile_app/core/api/client.dart';
+import 'package:weather_mobile_app/core/config/get_it.dart';
 import 'package:weather_mobile_app/core/error/failure.dart';
 import 'package:weather_mobile_app/core/location/current_location.dart';
 import 'package:weather_mobile_app/core/permission/app_permission.dart';
+import 'package:weather_mobile_app/core/router/route.dart';
 import 'package:weather_mobile_app/features/weather/data/models/current_model.dart';
 import 'package:weather_mobile_app/features/weather/data/models/daily_model.dart';
 import 'package:weather_mobile_app/features/weather/data/models/feels_like_model.dart';
@@ -21,45 +25,57 @@ import 'package:weather_mobile_app/features/weather/data/models/weather_api_resu
 import 'package:weather_mobile_app/features/weather/data/models/weather_model.dart';
 import 'package:weather_mobile_app/features/weather/domain/usecases/get_current_weather.dart';
 import 'package:weather_mobile_app/features/weather/presentation/bloc/weather_bloc.dart';
+import 'package:weather_mobile_app/my_app.dart';
 
-import 'weather_bloc_test.mocks.dart';
+import '../test/unit_test/features/weather/weather_bloc_test.mocks.dart';
 
 @GenerateNiceMocks(
   [
-    MockSpec<LocationService>(),
     MockSpec<PermissionService>(),
+    MockSpec<LocationService>(),
     MockSpec<GetCurrentWeather>(),
-    MockSpec<WeatherApiResultModel>(),
   ],
 )
 void main() {
-  late MockLocationService mockLocationService;
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
   late MockPermissionService mockPermissionService;
+  late MockLocationService mockLocationService;
   late MockGetCurrentWeather mockGetCurrentWeather;
   late WeatherApiResultModel mockWeatherApiResultModel;
-  late WeatherBloc weatherBloc;
+  late Position mockPosition;
 
-  setUp(() async {
+  setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
 
     final tempDir = await Directory.systemTemp.createTemp();
     Hive.init(tempDir.path);
 
-    final storage = await HydratedStorage.build(
+    // Initialize HydratedBloc storage
+    HydratedBloc.storage = await HydratedStorage.build(
       storageDirectory: tempDir,
     );
 
-    HydratedBloc.storage = storage;
+    //initialize service locator
+    await initGetIt();
+
+    mockPermissionService = MockPermissionService();
 
     mockLocationService = MockLocationService();
-    mockPermissionService = MockPermissionService();
+
     mockGetCurrentWeather = MockGetCurrentWeather();
 
-    // Initialized WeatherBloc
-    weatherBloc = WeatherBloc(
-      mockGetCurrentWeather,
-      mockLocationService,
-      mockPermissionService,
+    mockPosition = Position(
+      altitudeAccuracy: 1.0,
+      headingAccuracy: 1.0,
+      latitude: 14.630725,
+      longitude: 121.0165928381114,
+      timestamp: DateTime.now(),
+      accuracy: 1.0,
+      altitude: 1.0,
+      heading: 1.0,
+      speed: 1.0,
+      speedAccuracy: 1.0,
     );
 
     final currentModel = CurrentModel((b) => b
@@ -125,8 +141,8 @@ void main() {
       ..uvi = 8.5);
 
     mockWeatherApiResultModel = WeatherApiResultModel((b) => b
-      ..lat = 14.5995
-      ..lon = 120.9842
+      ..lat = 14.630725
+      ..lon = 121.0165928381114
       ..timezone = 'Asia/Manila'
       ..timezoneOffset = 28800
       ..current.replace(currentModel)
@@ -138,90 +154,49 @@ void main() {
     provideDummy<Either<Failure, WeatherApiResultModel>>(
       Left(Failure()),
     );
+
+    // Mock the location permission service to simulate "permission granted"
+    when(mockPermissionService.locationPermission()).thenAnswer(
+      (_) async => true, // Simulate permission granted
+    );
+
+    when(mockLocationService.getCurrentPosition())
+        .thenAnswer((_) async => mockPosition);
+
+    when(mockGetCurrentWeather.call(any))
+        .thenAnswer((_) async => Right(mockWeatherApiResultModel));
   });
 
-  tearDown(() => weatherBloc.close());
+  testWidgets('Integration Testing', (tester) async {
+    final router = sl<MyRouter>();
 
-  final mockPosition = Position(
-    longitude: 12.1,
-    latitude: 12.1,
-    timestamp: DateTime.now(),
-    accuracy: 1000,
-    altitude: 12.1,
-    altitudeAccuracy: 11.1,
-    heading: 11.1,
-    headingAccuracy: 11.1,
-    speed: 1000,
-    speedAccuracy: 1000,
-  );
+    await tester.pumpWidget(BlocProvider(
+      create: (context) => sl<WeatherBloc>(),
+      child: MyApp(
+        router: router,
+      ),
+    ));
 
-  group('WeatherBloc Test', () {
-    test('GetWeatherEvent event props', () {
-      final event = GetWeatherEvent();
+    await tester.pumpAndSettle();
 
-      weatherBloc.add(event);
+    //verify if the GetWeatherKey is exist
+    final getWeatherButton = find.byKey(const Key('getWeatherKey'));
 
-      final List<Object?> expectedProps = [];
+    //expect the result
+    expect(getWeatherButton, findsOneWidget);
 
-      expect(event.props, expectedProps);
-    });
+    // Tap the button
+    await tester.tap(getWeatherButton);
+    await tester.pumpAndSettle();
 
-    blocTest(
-      'emits [WeatherLoading, WeatherLoaded] when GetCurrentWeather is successful',
-      build: () {
-        when(mockPermissionService.locationPermission())
-            .thenAnswer((_) async => true);
+    // After tapping, the permission should have been granted by the mock
+    // Now you can assert the weather data loading
+    final loadingWidget = find.byKey(const Key('centerLoadingKey'));
+    // expect(loadingWidget, findsOneWidget);
 
-        when(mockLocationService.getCurrentPosition())
-            .thenAnswer((_) async => mockPosition);
+    // await tester.pumpAndSettle();
 
-        when(mockGetCurrentWeather.call(any))
-            .thenAnswer((_) async => Right(mockWeatherApiResultModel));
-
-        return weatherBloc;
-      },
-      act: (bloc) => bloc.add(GetWeatherEvent()),
-      expect: () => <WeatherState>[
-        WeatherLoading(),
-        WeatherLoaded(
-          result: mockWeatherApiResultModel,
-        ),
-      ],
-    );
-
-    blocTest(
-      'emits [WeatherLoading, WeatherError] when GetCurrentWeather get some error',
-      build: () {
-        when(mockPermissionService.locationPermission())
-            .thenAnswer((_) async => true);
-
-        when(mockLocationService.getCurrentPosition())
-            .thenAnswer((_) async => mockPosition);
-
-        when(mockGetCurrentWeather.call(any))
-            .thenAnswer((_) async => Left(Failure()));
-
-        return weatherBloc;
-      },
-      act: (bloc) => bloc.add(GetWeatherEvent()),
-      expect: () => <WeatherState>[
-        WeatherLoading(),
-        WeatherError(errMessage: 'Something went wrong'),
-      ],
-    );
-
-    blocTest(
-      'emits [WeatherLoading, WeatherError] when GetCurrentWeather is location is denied',
-      build: () {
-        when(mockPermissionService.locationPermission())
-            .thenAnswer((_) async => false);
-
-        return weatherBloc;
-      },
-      act: (bloc) => bloc.add(GetWeatherEvent()),
-      expect: () => <WeatherState>[
-        WeatherError(errMessage: 'Permission denied'),
-      ],
-    );
+    // final weatherResultWidget = find.byKey(const Key('weatherResultKey'));
+    // expect(weatherResultWidget, findsOneWidget);
   });
 }

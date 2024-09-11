@@ -6,7 +6,6 @@ class DioClient {
 
   DioClient() {
     const weatherAPI = String.fromEnvironment('API_ENDPOINT');
-
     _dio = Dio(
       BaseOptions(
         baseUrl: weatherAPI,
@@ -19,8 +18,13 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
+          //Add token
+          // options.headers["Authorization"] = 'Bearer your_token_here';
+
           // Modify or inspect the request before it's sent
-          if (kDebugMode) print("Request sent to: ${options.uri}");
+          if (kDebugMode) {
+            print("Request sent to: ${options.uri}");
+          }
           return handler.next(options);
         },
         onResponse: (response, handler) {
@@ -29,6 +33,9 @@ class DioClient {
           return handler.next(response);
         },
         onError: (DioException error, handler) {
+          // if(error.response?.statusCode == 401 && ) {
+
+          // }
           // Handle or inspect errors before they are returned
           if (kDebugMode) print("Error occurred: ${error.message}");
           return handler.next(error);

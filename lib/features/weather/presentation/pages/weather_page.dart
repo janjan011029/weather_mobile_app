@@ -15,6 +15,7 @@ class WeatherPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
+          key: Key('pinIconKey'),
           'Click the Pin Icon to Fetch Weather',
           style: TextStyle(
             fontSize: 14,
@@ -63,6 +64,7 @@ class WeatherPage extends StatelessWidget {
             return Column(
               children: [
                 WeatherWidget(
+                  key: const Key('weatherResultKey'),
                   imageUrl: 'https://openweathermap.org/img/wn/$icon@2x.png',
                   dewPoint: current.dewPoint,
                   feelsLike: current.feelsLike,
@@ -102,7 +104,7 @@ class WeatherPage extends StatelessWidget {
 
           return Center(
             child: CustomButton(
-              key: const Key('GetWeatherKey'),
+              key: const Key('getWeatherKey'),
               onTap: () => bloc.add(GetWeatherEvent()),
               title: 'Get Updated Weather',
             ),

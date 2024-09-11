@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:weather_mobile_app/core/api/client.dart';
 import 'package:weather_mobile_app/core/location/current_location.dart';
 import 'package:weather_mobile_app/core/permission/app_permission.dart';
+import 'package:weather_mobile_app/core/router/route.dart';
 import 'package:weather_mobile_app/features/weather/data/data_sources/weather_remote_data_source.dart';
 import 'package:weather_mobile_app/features/weather/data/repository/weather_repository_impl.dart';
 import 'package:weather_mobile_app/features/weather/domain/repository/weather_repository.dart';
@@ -12,6 +14,8 @@ final sl = GetIt.instance;
 
 Future<void> initGetIt() async {
   sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());
+
+  sl.registerLazySingleton<MyRouter>(() => MyRouter());
 
   sl.registerLazySingleton<PermissionService>(() => PermissionServiceImpl());
 

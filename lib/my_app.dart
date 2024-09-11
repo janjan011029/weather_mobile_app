@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:weather_mobile_app/core/router/route.dart';
 
-final _myRouter = MyRouter();
-
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.router});
+
+  final MyRouter router;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      routerConfig: _myRouter.routes,
+      routerConfig: router.routes,
     );
   }
 }
